@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@emailjs/browser": "^5.0.3",
     "expo": "~58.0.20",
+    "expo-image-picker": "~58.0.10",
     "expo-status-bar": "~58.0.4",
     "react": "19.3.0",
-    "react-native": "0.88.0"
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-dotenv": "^5.0.0",
+    "react-native-web": "^0.21.4"
   },
   "scripts": {
     "start": "expo start",

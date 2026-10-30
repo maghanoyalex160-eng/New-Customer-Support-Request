@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import emailjs from '@emailjs/browser';
 
 export default function App() {
   // Form State
@@ -39,7 +40,7 @@ export default function App() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'], // Na-update para sa pinakabagong expo-image-picker
       allowsEditing: true,
       quality: 0.8,
     });
@@ -49,7 +50,7 @@ export default function App() {
     }
   };
 
-  // 2. Upload Image to Cloudinary (Fixed for Web & Mobile compatibility)
+  // 2. Upload Image to Cloudinary
   const uploadToCloudinary = async (uri) => {
     const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -60,7 +61,6 @@ export default function App() {
 
     const data = new FormData();
 
-    // Suporta para sa Web at Mobile (Android/iOS)
     if (Platform.OS === 'web') {
       const res = await fetch(uri);
       const blob = await res.blob();
@@ -88,7 +88,7 @@ export default function App() {
     return fileData.secure_url;
   };
 
-  // 3. Send Email via EmailJS REST API
+  // 3. Send Email via EmailJS Official SDK (Gumagamit na ng tamang SDK para maiwasan ang error)
   const sendEmailWithEmailJS = async (imageUrl) => {
     const serviceId = process.env.EXPO_PUBLIC_EMAILJS_SERVICE_ID;
     const templateId = process.env.EXPO_PUBLIC_EMAILJS_TEMPLATE_ID;
@@ -106,25 +106,17 @@ export default function App() {
       image_url: imageUrl || 'No screenshot provided',
     };
 
-    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        service_id: serviceId,
-        template_id: templateId,
-        user_id: publicKey,
-        template_params: templateParams,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Email sending failed: ${errorText}`);
+    try {
+      await emailjs.send(
+        serviceId,
+        templateId,
+        templateParams,
+        publicKey
+      );
+      return true;
+    } catch (error) {
+      throw new Error(`Email sending failed: ${error.text || error.message || JSON.stringify(error)}`);
     }
-
-    return true;
   };
 
   // 4. Handle Form Submission Workflow
